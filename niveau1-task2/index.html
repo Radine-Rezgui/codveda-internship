@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Users API — Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #171b26;
+      --border:    #252a38;
+      --accent:    #4f8ef7;
+      --accent2:   #7c5af7;
+      --success:   #3ecf8e;
+      --danger:    #f75a5a;
+      --warn:      #f7b955;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .logo span { color: var(--muted); font-weight: 400; }
+    .badge {
+      background: color-mix(in srgb, var(--success) 15%, transparent);
+      color: var(--success);
+      font-family: var(--mono);
+      font-size: .7rem;
+      padding: .2em .6em;
+      border-radius: 4px;
+      border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+    }
+
+    /* ── Layout ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* ── Panel gauche ── */
+    .panel {
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: .68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: .75rem;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: .4rem; }
+    label { font-size: .8rem; color: var(--muted); font-weight: 500; }
+
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: .85rem;
+      padding: .55rem .8rem;
+      transition: border-color .15s;
+      outline: none;
+      width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: .85rem;
+      font-weight: 600;
+      padding: .6rem 1rem;
+      transition: opacity .15s, transform .1s;
+      width: 100%;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger  { background: var(--danger); color: #fff; }
+    .btn-ghost   { background: var(--border); color: var(--text); }
+
+    .btn-row { display: flex; gap: .5rem; }
+    .btn-row .btn { flex: 1; }
+
+    /* ── Contenu principal ── */
+    .content {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+    }
+
+    /* Stats */
+    .stats { display: flex; gap: 1rem; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .9rem 1.2rem;
+      flex: 1;
+    }
+    .stat-label {
+      font-size: .72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .25rem;
+    }
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Table */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-title {
+      font-weight: 600;
+      font-size: .9rem;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      font-family: var(--mono);
+      font-size: .7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      text-align: left;
+      padding: .75rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: .85rem 1.2rem;
+      font-size: .875rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+    .id-chip {
+      font-family: var(--mono);
+      font-size: .75rem;
+      color: var(--accent2);
+      background: color-mix(in srgb, var(--accent2) 12%, transparent);
+      padding: .15em .5em;
+      border-radius: 4px;
+    }
+    .email-text { color: var(--muted); font-family: var(--mono); font-size: .8rem; }
+
+    .action-btns { display: flex; gap: .4rem; }
+    .btn-sm {
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .75rem;
+      font-weight: 600;
+      padding: .3em .7em;
+      transition: opacity .15s;
+    }
+    .btn-sm:hover { opacity: .8; }
+    .btn-edit { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+    .btn-del  { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+      font-size: .875rem;
+    }
+    .empty-icon { font-size: 2rem; margin-bottom: .5rem; }
+
+    /* Status bar */
+    #status-bar {
+      border-top: 1px solid var(--border);
+      padding: .4rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-family: var(--mono);
+      font-size: .72rem;
+      color: var(--muted);
+      min-height: 32px;
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .4; }
+    }
+    #status-msg { transition: color .2s; }
+    #status-msg.error { color: var(--danger); }
+    #status-msg.ok    { color: var(--success); }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid var(--border); }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 3rem; right: 1.5rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: .75rem 1.2rem;
+      font-size: .85rem; display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      z-index: 100;
+      animation: slideUp .2s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(10px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    #toast.ok  { border-color: var(--success); color: var(--success); }
+    #toast.err { border-color: var(--danger);  color: var(--danger); }
+
+    @media (max-width: 720px) {
+      main { grid-template-columns: 1fr; }
+      .panel { border-right: none; border-bottom: 1px solid var(--border); }
+      .stats { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">users<span>/api</span></span>
+  <span class="badge">● running</span>
+</header>
+
+<main>
+  <!-- ── Formulaire ── -->
+  <aside class="panel">
+
+    <div>
+      <p class="section-label">Action</p>
+      <select id="action" onchange="onActionChange()">
+        <option value="add">➕ Ajouter un utilisateur</option>
+        <option value="edit">✏️ Modifier un utilisateur</option>
+        <option value="delete">🗑️ Supprimer un utilisateur</option>
+      </select>
+    </div>
+
+    <hr/>
+
+    <!-- Champ ID (pour edit/delete) -->
+    <div class="form-group" id="id-group" style="display:none">
+      <label>ID utilisateur</label>
+      <input type="number" id="userId" placeholder="ex: 1" min="1"/>
+    </div>
+
+    <!-- Champs nom / email (pour add/edit) -->
+    <div id="fields-group">
+      <div class="form-group" style="margin-bottom:.8rem">
+        <label>Nom</label>
+        <input type="text" id="nom" placeholder="ex: Radine"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="ex: radine@gmail.com"/>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="submit()">Exécuter</button>
+      <button class="btn btn-ghost" onclick="resetForm()">Reset</button>
+    </div>
+
+    <hr/>
+
+    <div>
+      <p class="section-label">Recherche rapide</p>
+      <div class="form-group">
+        <label>Chercher par ID</label>
+        <input type="number" id="searchId" placeholder="ex: 2" min="1"/>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:.6rem" onclick="searchById()">Rechercher</button>
+    </div>
+
+  </aside>
+
+  <!-- ── Table ── -->
+  <section class="content">
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total utilisateurs</div>
+        <div class="stat-value" id="count">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Dernière action</div>
+        <div class="stat-value" id="last-action" style="font-size:1rem;color:var(--success)">—</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">Utilisateurs</span>
+        <button class="btn btn-ghost" style="width:auto;padding:.4rem .8rem;font-size:.8rem" onclick="loadUsers()">↻ Rafraîchir</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-table"></tbody>
+      </table>
+      <div id="empty-state" class="empty" style="display:none">
+        <div class="empty-icon">👤</div>
+        Aucun utilisateur trouvé
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<div id="status-bar">
+  <div class="status-dot"></div>
+  <span id="status-msg">Connecté à http://localhost:3000</span>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3000';
+
+  // ── Utilitaires ──────────────────────────────────────────────
+  function setStatus(msg, type = '') {
+    const el = document.getElementById('status-msg');
+    el.textContent = msg;
+    el.className = type;
+  }
+
+  function toast(msg, type = 'ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = type;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+
+  function onActionChange() {
+    const action = document.getElementById('action').value;
+    document.getElementById('id-group').style.display =
+      (action === 'edit' || action === 'delete') ? 'flex' : 'none';
+    document.getElementById('id-group').style.flexDirection = 'column';
+    document.getElementById('fields-group').style.display =
+      (action === 'delete') ? 'none' : 'block';
+  }
+
+  function resetForm() {
+    document.getElementById('userId').value = '';
+    document.getElementById('nom').value = '';
+    document.getElementById('email').value = '';
+  }
+
+  // ── Charger tous les users ────────────────────────────────────
+  async function loadUsers() {
+    setStatus('GET /users…');
+    try {
+      const res = await fetch(`${API}/users`);
+      const users = await res.json();
+      renderTable(users);
+      document.getElementById('count').textContent = users.length;
+      setStatus(`GET /users → 200 OK (${users.length} résultats)`, 'ok');
+    } catch (e) {
+      setStatus('Erreur : serveur inaccessible sur localhost:3000', 'error');
+      toast('Serveur inaccessible', 'err');
+    }
+  }
+
+  function renderTable(users) {
+    const tbody = document.getElementById('users-table');
+    const empty = document.getElementById('empty-state');
+    if (!users.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td><span class="id-chip">#${u.id}</span></td>
+        <td>${u.nom}</td>
+        <td><span class="email-text">${u.email}</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-sm btn-edit" onclick="prefillEdit(${u.id},'${u.nom}','${u.email}')">Modifier</button>
+            <button class="btn-sm btn-del"  onclick="quickDelete(${u.id})">Supprimer</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Pré-remplir le formulaire d'édition ──────────────────────
+  function prefillEdit(id, nom, email) {
+    document.getElementById('action').value = 'edit';
+    onActionChange();
+    document.getElementById('userId').value = id;
+    document.getElementById('nom').value = nom;
+    document.getElementById('email').value = email;
+  }
+
+  // ── Rechercher par ID ─────────────────────────────────────────
+  async function searchById() {
+    const id = document.getElementById('searchId').value;
+    if (!id) { toast('Saisissez un ID', 'err'); return; }
+    setStatus(`GET /users/${id}…`);
+    try {
+      const res = await fetch(`${API}/users/${id}`);
+      if (res.status === 404) {
+        toast(`Utilisateur #${id} introuvable`, 'err');
+        setStatus(`GET /users/${id} → 404`, 'error');
+        return;
+      }
+      const user = await res.json();
+      renderTable([user]);
+      document.getElementById('count').textContent = '1 résultat';
+      setStatus(`GET /users/${id} → 200 OK`, 'ok');
+    } catch (e) {
+      setStatus('Erreur réseau', 'error');
+    }
+  }
+
+  // ── Soumettre le formulaire ───────────────────────────────────
+  async function submit() {
+    const action = document.getElementById('action').value;
+    const id     = document.getElementById('userId').value;
+    const nom    = document.getElementById('nom').value.trim();
+    const email  = document.getElementById('email').value.trim();
+
+    if (action === 'add') {
+      if (!nom || !email) { toast('Nom et email requis', 'err'); return; }
+      setStatus('POST /users…');
+      const res = await fetch(`${API}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, email })
+      });
+      const data = await res.json();
+      toast(`✅ Utilisateur "${data.nom}" ajouté (#${data.id})`, 'ok');
+      setStatus(`POST /users → 201 Created`, 'ok');
+      document.getElementById('last-action').textContent = 'POST';
+
+    } else if (action === 'edit') {
+      if (!id) { toast('ID requis', 'err'); return; }
+      setStatus(`PUT /users/${id}…`);
+      const res = await fetch(`${API}/users/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, email })
+      });
+      if (res.status === 404) { toast(`Utilisateur #${id} introuvable`, 'err'); return; }
+      const data = await res.json();
+      toast(`✏️ Utilisateur #${data.id} mis à jour`, 'ok');
+      setStatus(`PUT /users/${id} → 200 OK`, 'ok');
+      document.getElementById('last-action').textContent = 'PUT';
+
+    } else if (action === 'delete') {
+      if (!id) { toast('ID requis', 'err'); return; }
+      await quickDelete(id);
+    }
+
+    resetForm();
+    loadUsers();
+  }
+
+  async function quickDelete(id) {
+    if (!confirm(`Supprimer l'utilisateur #${id} ?`)) return;
+    setStatus(`DELETE /users/${id}…`);
+    const res = await fetch(`${API}/users/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    toast(`🗑️ ${data.message}`, 'ok');
+    setStatus(`DELETE /users/${id} → 200 OK`, 'ok');
+    document.getElementById('last-action').textContent = 'DELETE';
+    loadUsers();
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+  loadUsers();
+</script>
+</body>
+</html>
